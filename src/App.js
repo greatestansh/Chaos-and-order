@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { scanBoardPatterns } from "./utils/gameLogic";
 import { getBestMove } from "./utils/engine";
 
@@ -18,6 +17,88 @@ export default function App() {
   const [moveCount, setMoveCount] = useState(0);
   const [round1Stats, setRound1Stats] = useState(null);
 
+  const determineOverallWinner = useCallback(
+    (r2OrderWon, r2Moves, r2Patterns) => {
+      const r2Straight4s = r2Patterns.X.straight4 + r2Patterns.O.straight4;
+      let result = "";
+
+      if (round1Stats?.orderWonRound) {
+        if (r2OrderWon && r2Moves < round1Stats.moves) {
+          result = "AI (Order) wins the game! (Faster 5-in-a-row)";
+        } else if (r2OrderWon && r2Moves === round1Stats.moves) {
+          if (r2Straight4s > round1Stats.straight4s) {
+            result = "AI wins! (More straight 4s)";
+          } else if (r2Straight4s < round1Stats.straight4s) {
+            result = "You win! (More straight 4s in Round 1)";
+          } else {
+            result = "It's a Draw! (Perfect tie)";
+          }
+        } else {
+          result = "You win the game! (AI failed to beat your move count)";
+        }
+      } else {
+        if (r2OrderWon) {
+          result = "AI wins the game! (Achieved 5-in-a-row)";
+        } else if (r2Straight4s > round1Stats?.straight4s) {
+          result = "AI wins! (More straight 4s)";
+        } else if (r2Straight4s < round1Stats?.straight4s) {
+          result = "You win! (More straight 4s in Round 1)";
+        } else {
+          result = "It's a Draw!";
+        }
+      }
+
+      setWinnerText(result);
+      setGameOver(true);
+    },
+    [round1Stats]
+  );
+
+  const handleMove = useCallback(
+    (index, piece) => {
+      if (board[index] || gameOver) return;
+
+      const nextBoard = [...board];
+      nextBoard[index] = piece;
+      setBoard(nextBoard);
+
+      const nextMoveCount = moveCount + 1;
+      setMoveCount(nextMoveCount);
+
+      const patterns = scanBoardPatterns(nextBoard);
+      const orderWonRound = patterns.X.straight5 > 0 || patterns.O.straight5 > 0;
+      const boardFull = nextMoveCount === TOTAL_CELLS;
+
+      if (orderWonRound || boardFull) {
+        if (round === 1) {
+          alert(
+            `Round 1 Over! Order (You) ${
+              orderWonRound ? "won" : "failed"
+            } in ${nextMoveCount} moves.`
+          );
+
+          setRound1Stats({
+            orderWonRound,
+            moves: nextMoveCount,
+            straight4s: patterns.X.straight4 + patterns.O.straight4,
+          });
+
+          setRound(2);
+          setBoard(EMPTY_BOARD());
+          setMoveCount(0);
+          setIsPlayerTurn(false);
+        } else {
+          determineOverallWinner(orderWonRound, nextMoveCount, patterns);
+        }
+
+        return;
+      }
+
+      setIsPlayerTurn((turn) => !turn);
+    },
+    [board, gameOver, moveCount, round, determineOverallWinner]
+  );
+
   useEffect(() => {
     if (isPlayerTurn || gameOver) return;
 
@@ -31,86 +112,7 @@ export default function App() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isPlayerTurn, gameOver, board, round]);
-
-  const determineOverallWinner = (r2OrderWon, r2Moves, r2Patterns) => {
-    const r2Straight4s = r2Patterns.X.straight4 + r2Patterns.O.straight4;
-
-    let result = "";
-
-    if (round1Stats.orderWonRound) {
-      if (r2OrderWon && r2Moves < round1Stats.moves) {
-        result = "AI (Order) wins the game! (Faster 5-in-a-row)";
-      } else if (r2OrderWon && r2Moves === round1Stats.moves) {
-        if (r2Straight4s > round1Stats.straight4s) {
-          result = "AI wins! (More straight 4s)";
-        } else if (r2Straight4s < round1Stats.straight4s) {
-          result = "You win! (More straight 4s in Round 1)";
-        } else {
-          result = "It's a Draw! (Perfect tie)";
-        }
-      } else {
-        result = "You win the game! (AI failed to beat your move count)";
-      }
-    } else {
-      if (r2OrderWon) {
-        result = "AI wins the game! (Achieved 5-in-a-row)";
-      } else if (r2Straight4s > round1Stats.straight4s) {
-        result = "AI wins! (More straight 4s)";
-      } else if (r2Straight4s < round1Stats.straight4s) {
-        result = "You win! (More straight 4s in Round 1)";
-      } else {
-        result = "It's a Draw!";
-      }
-    }
-
-    setWinnerText(result);
-    setGameOver(true);
-  };
-
-  const handleMove = (index, piece) => {
-    if (board[index] || gameOver) return;
-
-    const nextBoard = [...board];
-    nextBoard[index] = piece;
-    setBoard(nextBoard);
-
-    const nextMoveCount = moveCount + 1;
-    setMoveCount(nextMoveCount);
-
-    const patterns = scanBoardPatterns(nextBoard);
-    const orderWonRound =
-      patterns.X.straight5 > 0 || patterns.O.straight5 > 0;
-
-    const boardFull = nextMoveCount === TOTAL_CELLS;
-
-    if (orderWonRound || boardFull) {
-      if (round === 1) {
-        alert(
-          `Round 1 Over! Order (You) ${
-            orderWonRound ? "won" : "failed"
-          } in ${nextMoveCount} moves.`
-        );
-
-        setRound1Stats({
-          orderWonRound,
-          moves: nextMoveCount,
-          straight4s: patterns.X.straight4 + patterns.O.straight4,
-        });
-
-        setRound(2);
-        setBoard(EMPTY_BOARD());
-        setMoveCount(0);
-        setIsPlayerTurn(false);
-      } else {
-        determineOverallWinner(orderWonRound, nextMoveCount, patterns);
-      }
-
-      return;
-    }
-
-    setIsPlayerTurn((turn) => !turn);
-  };
+  }, [isPlayerTurn, gameOver, board, round, handleMove]);
 
   const handleCellClick = (index) => {
     if (isPlayerTurn) {
@@ -125,19 +127,13 @@ export default function App() {
       </h1>
 
       <div className="mb-6 text-center">
-        <p className="text-lg font-semibold text-cyan-400">
-          Round {round} of 2
-        </p>
-
+        <p className="text-lg font-semibold text-cyan-400">Round {round} of 2</p>
         <p className="text-md text-slate-300">
           {round === 1
             ? "You are ORDER. Build a 5 in a row."
             : "You are CHAOS. Prevent the AI from building a 5 in a row."}
         </p>
-
-        <p className="mt-1 text-sm text-slate-400">
-          Moves: {moveCount} / 36
-        </p>
+        <p className="mt-1 text-sm text-slate-400">Moves: {moveCount} / 36</p>
       </div>
 
       <div className="mb-6 flex gap-4">
@@ -174,9 +170,7 @@ export default function App() {
             className="flex h-12 w-12 cursor-pointer items-center justify-center bg-slate-900 text-2xl font-bold transition-colors hover:bg-slate-800 sm:h-16 sm:w-16 sm:text-3xl"
           >
             <span
-              className={
-                cell === "X" ? "text-cyan-400" : "text-violet-400"
-              }
+              className={cell === "X" ? "text-cyan-400" : "text-violet-400"}
             >
               {cell}
             </span>
@@ -190,12 +184,9 @@ export default function App() {
         ) : isPlayerTurn ? (
           <span className="text-cyan-400">Your Turn</span>
         ) : (
-          <span className="animate-pulse text-violet-400">
-            AI is Thinking...
-          </span>
+          <span className="animate-pulse text-violet-400">AI is Thinking...</span>
         )}
       </div>
     </div>
   );
 }
-
