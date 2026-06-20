@@ -21,3 +21,32 @@ const getValidLines=()=>{
 
 let winningLines=getValidLines();
 
+export const scanBoardPatterns = (board) => {
+    const patterns = { X: { straight4: 0, straight5: 0 }, O: { straight4: 0, straight5: 0 } };
+
+    winningLines.forEach(lineIndices => {
+        let currentPiece = null;
+        let streak = 0;
+        const lineValues = lineIndices.map(index => board[index]);
+
+        const tallyStreak = (piece, length) => {
+            if (!piece) return;
+            if (length === 4) patterns[piece].straight4 += 1;
+            if (length >= 5) patterns[piece].straight5 += 1; 
+        };
+
+        for (let i = 0; i < lineValues.length; i++) {
+            const piece = lineValues[i];
+            if (piece !== null && piece === currentPiece) {
+                streak++;
+            } else {
+                tallyStreak(currentPiece, streak);
+                currentPiece = piece;
+                streak = piece !== null ? 1 : 0;
+            }
+        }
+        tallyStreak(currentPiece, streak);
+    });
+
+    return patterns;
+};
