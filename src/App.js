@@ -30,6 +30,7 @@ export default function App() {
     }, 100);
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver, board, round]);
 
   const determineOverallWinner = (r2OrderWon, r2Moves, r2Patterns) => {
