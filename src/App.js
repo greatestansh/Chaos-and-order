@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { scanBoardPatterns } from "./utils/gameLogic";
 import { getBestMove } from "./utils/engine";
@@ -30,7 +31,6 @@ export default function App() {
     }, 100);
 
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayerTurn, gameOver, board, round]);
 
   const determineOverallWinner = (r2OrderWon, r2Moves, r2Patterns) => {
@@ -79,13 +79,17 @@ export default function App() {
     setMoveCount(nextMoveCount);
 
     const patterns = scanBoardPatterns(nextBoard);
-    const orderWonRound = patterns.X.straight5 > 0 || patterns.O.straight5 > 0;
+    const orderWonRound =
+      patterns.X.straight5 > 0 || patterns.O.straight5 > 0;
+
     const boardFull = nextMoveCount === TOTAL_CELLS;
 
     if (orderWonRound || boardFull) {
       if (round === 1) {
         alert(
-          `Round 1 Over! Order (You) ${orderWonRound ? "won" : "failed"} in ${nextMoveCount} moves.`
+          `Round 1 Over! Order (You) ${
+            orderWonRound ? "won" : "failed"
+          } in ${nextMoveCount} moves.`
         );
 
         setRound1Stats({
@@ -115,17 +119,25 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 font-sans">
-      <h1 className="mb-2 text-4xl font-bold text-gray-800">Order & Chaos</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 font-mono text-slate-100">
+      <h1 className="mb-2 text-4xl font-bold tracking-wide text-violet-300">
+        Order & Chaos
+      </h1>
 
       <div className="mb-6 text-center">
-        <p className="text-lg font-semibold text-blue-800">Round {round} of 2</p>
-        <p className="text-md text-gray-600">
+        <p className="text-lg font-semibold text-cyan-400">
+          Round {round} of 2
+        </p>
+
+        <p className="text-md text-slate-300">
           {round === 1
             ? "You are ORDER. Build a 5 in a row."
             : "You are CHAOS. Prevent the AI from building a 5 in a row."}
         </p>
-        <p className="mt-1 text-sm text-gray-500">Moves: {moveCount} / 36</p>
+
+        <p className="mt-1 text-sm text-slate-400">
+          Moves: {moveCount} / 36
+        </p>
       </div>
 
       <div className="mb-6 flex gap-4">
@@ -133,7 +145,9 @@ export default function App() {
           onClick={() => setSelectedPiece("X")}
           disabled={!isPlayerTurn || gameOver}
           className={`rounded px-6 py-2 font-bold transition-colors ${
-            selectedPiece === "X" ? "bg-blue-600 text-white" : "bg-gray-300"
+            selectedPiece === "X"
+              ? "bg-cyan-500 text-slate-950"
+              : "bg-slate-700 text-slate-200"
           } disabled:opacity-50`}
         >
           Select X
@@ -143,21 +157,27 @@ export default function App() {
           onClick={() => setSelectedPiece("O")}
           disabled={!isPlayerTurn || gameOver}
           className={`rounded px-6 py-2 font-bold transition-colors ${
-            selectedPiece === "O" ? "bg-red-600 text-white" : "bg-gray-300"
+            selectedPiece === "O"
+              ? "bg-violet-500 text-white"
+              : "bg-slate-700 text-slate-200"
           } disabled:opacity-50`}
         >
           Select O
         </button>
       </div>
 
-      <div className="grid grid-cols-6 gap-1 rounded-lg bg-gray-800 p-2 shadow-lg">
+      <div className="grid grid-cols-6 gap-1 rounded-lg border border-slate-700 bg-slate-800 p-2 shadow-lg">
         {board.map((cell, index) => (
           <div
             key={index}
             onClick={() => handleCellClick(index)}
-            className="flex h-12 w-12 cursor-pointer items-center justify-center bg-white text-2xl font-bold transition-colors hover:bg-gray-200 sm:h-16 sm:w-16 sm:text-3xl"
+            className="flex h-12 w-12 cursor-pointer items-center justify-center bg-slate-900 text-2xl font-bold transition-colors hover:bg-slate-800 sm:h-16 sm:w-16 sm:text-3xl"
           >
-            <span className={cell === "X" ? "text-blue-600" : "text-red-600"}>
+            <span
+              className={
+                cell === "X" ? "text-cyan-400" : "text-violet-400"
+              }
+            >
               {cell}
             </span>
           </div>
@@ -166,13 +186,16 @@ export default function App() {
 
       <div className="mt-6 h-8 text-xl font-semibold">
         {gameOver ? (
-          <span className="text-green-600">{winnerText}</span>
+          <span className="text-emerald-400">{winnerText}</span>
         ) : isPlayerTurn ? (
-          <span className="text-blue-600">Your Turn</span>
+          <span className="text-cyan-400">Your Turn</span>
         ) : (
-          <span className="animate-pulse text-red-600">AI is Thinking...</span>
+          <span className="animate-pulse text-violet-400">
+            AI is Thinking...
+          </span>
         )}
       </div>
     </div>
   );
 }
+
